@@ -1,63 +1,92 @@
-import React, { useEffect, useRef } from 'react'
-import {Link, useNavigate} from 'react-router-dom'
-import { useAuth } from '../utils/AuthContext'
+import React, { useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../utils/AuthContext";
+
 const Login = () => {
-
-  const {user,loginUser,error} = useAuth();
+  const { user, loginUser, error, clearError, loading } = useAuth();
   const navigate = useNavigate();
-
   const loginForm = useRef(null);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    clearError();
+  }, []);
 
+  const handleSubmit = (e) => {
     e.preventDefault();
+    clearError(); 
+
     const email = loginForm.current.email.value;
     const password = loginForm.current.password.value;
 
-    const userInfo = {email,password};
-    loginUser(userInfo);
+    loginUser({ email, password });
+  };
 
-
-
-  }
-
-  useEffect(()=>{
-
-    user?navigate('/'):navigate('/login');
-  },[user]);
+  useEffect(() => {
+    if (user) {
+      navigate("/profile");
+    }
+  }, [user, navigate]);
 
   return (
-    <section className='flex flex-col justify-top items-center h-screen pt-20'>
-      <form ref={loginForm} onSubmit={handleSubmit} action="" className=' w-[500px] bg-white shadow-lg border-1 border-gray-200 p-5  text-black flex flex-col  gap-5 rounded-xl'>
+    <section className="flex flex-col justify-top items-center h-screen pt-20">
+      <form
+        ref={loginForm}
+        onSubmit={handleSubmit}
+        className="w-[500px] bg-white shadow-lg border border-gray-200 p-5 text-black flex flex-col gap-5 rounded-xl"
+      >
+        <h1 className="text-2xl font-bold text-center">Login to Your Account</h1>
 
-        <div className='flex flex-col gap-3'>
-        <label htmlFor="email">Email</label>
-        <input type="email" name='email' required placeholder='' />
+        <div className="flex flex-col gap-3">
+          <label htmlFor="email">Email</label>
+          <input type="email" name="email" required placeholder="Enter your email" />
         </div>
 
-        <div className='flex flex-col gap-3'>
-        <label htmlFor="Password" >Password</label>
-        <input type="password" name='password'  required placeholder='Enter your password' />
+        <div className="flex flex-col gap-3">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            name="password"
+            required
+            min={6}
+            placeholder="Enter your password"
+          />
         </div>
 
-          <div className='grid grid-cols-2   text-white '>
-            <button className='loginBtn'>Login</button>
-            <Link to='/register' className='registerBtn text-center'>Register</Link>
+        {error && (
+          <div className="error">
+            <p>⚠️ {error}</p>
+          </div>
+        )}
 
+        <div className="flex flex-col gap-3">
+          <button
+            type="submit"
+            disabled={loading}
+            className={`primaryBtn ${loading ? "bg-gray-400 cursor-not-allowed" : ""}`}
+          >
+            {loading ? "Loading..." : "Login"}
+          </button>
 
-           
+          <p className="text-center pt-5">
+            <Link to="/resetPassword" className="text-blue-600 hover:underline">
+              Forgot password
+            </Link>
+          </p>
         </div>
 
-        <div className='error'>
-          {
-            error?<p>⚠️{error}</p>:null
-          }
-        </div>
+        <div className="border-t border-gray-300"></div>
 
-        
+        <div className="text-center">
+          <p>
+            Don't have an account?{" "}
+            <Link to="/register" className="text-blue-500 font-semibold hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </form>
     </section>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

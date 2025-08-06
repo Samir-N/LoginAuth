@@ -6,21 +6,26 @@ import Spinner from "../components/Spinner";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [loading, setLoading] = useState(null);
-  const [user, setUser] = useState();
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false); 
+  const [user, setUser] = useState(null); 
   const [error, setError] = useState(null);
-  const [initialLoading, setInitialLoading] = useState(true);
+
+  const clearError = () => setError(null);
 
   const loginUser = async (userInfo) => {
     setLoading(true);
+    clearError(); 
     try {
-      let response = await account.createEmailPasswordSession(userInfo.email, userInfo.password);
-      let accountDetails = await account.get();
+      await account.createEmailPasswordSession(userInfo.email, userInfo.password);
+      const accountDetails = await account.get();
       setUser(accountDetails);
-      console.log(accountDetails);
     } catch (err) {
-      console.log("ERROR is " + err);
-      setError("Account not found ! Please register first");
+      console.error("Login error:", err);
+     
+      setError(
+       "Login Failed"
+      );
       setUser(null);
     } finally {
       setLoading(false);
@@ -28,20 +33,35 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutUser = async () => {
-    account.deleteSession('current');
-    setUser(null);
+    try {
+      setLoading(true);
+      await account.deleteSession('current');
+      setUser(null);
+    } catch (err) {
+      
+      console.error("Logout error:", err);
+      setError("Failed to log out. Please try again.");
+    }
+    finally{
+      setLoading(false);
+    }
   };
 
   const registerUser = async ({ username, email, password }) => {
     setLoading(true);
+    clearError();
     try {
-      let response = account.create(ID.unique(), email, password, username);
-      let response1 = await account.createEmailPasswordSession(email, password);
-      let accountDetails = await account.get();
+      await account.create(ID.unique(), email, password, username); 
+      await account.createEmailPasswordSession(email, password);
+      const accountDetails = await account.get();
       setUser(accountDetails);
     } catch (err) {
-      console.log
-      setError(err?.message);
+      console.error("Registration error:", err);
+      setError(
+        err?.type === "user_already_exists" 
+          ? "Email already registered." 
+          : "Registration failed. Please try again."
+      );
       setUser(null);
     } finally {
       setLoading(false);
@@ -51,15 +71,13 @@ export const AuthProvider = ({ children }) => {
   const checkUserStatus = async () => {
     setInitialLoading(true); 
     try {
-      setInitialLoading(true);
       const accountDetails = await account.get();
       setUser(accountDetails);
-
     } catch (error) {
       console.log("User not logged in or session expired");
       setUser(null);
     } finally {
-      setInitialLoading(false); 
+      setInitialLoading(false);
     }
   };
 
@@ -70,21 +88,21 @@ export const AuthProvider = ({ children }) => {
   const contextData = {
     user,
     error,
+    setLoading,
     loading,
     setError,
     loginUser,
-    setLoading,
     logoutUser,
     registerUser,
-    checkUserStatus,
+    clearError, 
   };
 
   return (
     <AuthContext.Provider value={contextData}>
-      {loading||initialLoading ? <Spinner/> : children}
+      {initialLoading ? <Spinner /> : children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => { return useContext(AuthContext) };
+export const useAuth = () => useContext(AuthContext);
 export { AuthContext };

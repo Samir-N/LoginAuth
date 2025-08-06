@@ -1,113 +1,122 @@
-import React, { useEffect, useRef } from 'react'
-import {Link} from 'react-router-dom'
-import { useAuth } from '../utils/AuthContext'
-import { useNavigate } from 'react-router-dom'
-const Register = () => {
+import React, { useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../utils/AuthContext'; // Assuming AuthContext is in utils folder
 
-  const{registerUser,error,setError,user} = useAuth();
+const Register = () => {
+  const { registerUser, error, setError,clearError, user,loading } = useAuth();
   const registerForm = useRef(null);
   const navigate = useNavigate();
-  setError("");
 
+  useEffect(() => {
+ 
+    clearError();
 
-
+    if (user) {
+      navigate('/'); 
+    }
+  }, [user]);
 
   const handleSubmit = (e) => {
+    e.preventDefault();
 
-  e.preventDefault();
+    const form = registerForm.current;
+    const username = form.username.value;
+    const email = form.email.value;
+    const password = form.password.value;
+    const confirmPassword = form.conformPassword.value; 
 
-  const username = registerForm.current.username.value;
-  const email = registerForm.current.email.value;
-  const password = registerForm.current.password.value;
-  const conformPassword = registerForm.current.conformPassword.value;
 
-    if (password !== conformPassword) {
-    setError("Confirm password does not match");
-    return;
+
+  
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
     }
 
-  const userInfo = {username,email,password};
+    if (password.length < 6) {
+      setError('Password should be at least 6 characters');
+      return;
+    }
 
-  registerUser(userInfo);
-
-
-
-  }
-
-useEffect(()=>{
-  if(user)
-    navigate('/');
-},[])
-
+    const userInfo = { username, email, password };
+    registerUser(userInfo);
+  };
 
   return (
     <section className='flex flex-col justify-top items-center h-screen pt-20'>
       <form
-  ref={registerForm}
-  onSubmit={handleSubmit}
-  className="w-[500px] bg-white shadow-lg border border-gray-200 p-5 text-black flex flex-col gap-5 rounded-xl"
->
-  <div className="flex flex-col gap-3">
-    <label htmlFor="username">Userame</label>
-    <input
-      type="text"
-      name="username"
-      placeholder="Enter your username"
-      required
-    />
-  </div>
+        ref={registerForm}
+        onSubmit={handleSubmit}
+        className='w-[500px] bg-white shadow-lg border border-gray-200 p-5 text-black flex flex-col gap-5 rounded-xl'
+      >
+        <h1 className='text-2xl font-bold text-center'>Create Account</h1>
 
+        <div className='flex flex-col gap-3'>
+          <label htmlFor='username'>Username</label>
+          <input
+            type='text'
+            name='username'
+            placeholder='Enter your username'
+            required
+            minLength={3}
+          />
+        </div>
 
-  <div className="flex flex-col gap-3">
-    <label htmlFor="email">Email</label>
-    <input
-      type="email"
-      name="email"
-      required
-      placeholder="Enter your email"
-    />
-  </div>
+        <div className='flex flex-col gap-3'>
+          <label htmlFor='email'>Email</label>
+          <input
+            type='email'
+            name='email'
+            required
+            placeholder='Enter your email'
+          />
+        </div>
 
-  <div className="flex flex-col gap-3" >
-    <label htmlFor="password">Password</label>
-    <input
-      type="password"
-      name="password"
-      required
-      
-      placeholder="Enter your password"
-    />
-  </div>
+        <div className='flex flex-col gap-3'>
+          <label htmlFor='password'>Password</label>
+          <input
+            type='password'
+            name='password'
+            required
+            minLength={6}
+            placeholder='Enter your password'
+          />
+        </div>
 
-  <div className="flex flex-col gap-3">
-    <label htmlFor="confirmPassword">Confirm Password</label>
-    <input
-      type="password"
-      name="conformPassword"
-      required
-     
-      placeholder="Confirm your password"
-    />
-  </div>
+        <div className='flex flex-col gap-3'>
+          <label htmlFor='conformPassword'>Confirm Password</label>
+          <input
+            type='password'
+            name='conformPassword' 
+            required
+            minLength={6}
+            placeholder='Confirm your password'
+          />
+        </div>
 
-  <div className="flex flex-col">
-    <button type="submit" className="registerBtn pointer">
-      Sign Up
-    </button>
-    <p>
-      Already have an account?
-      <Link to="/login" className="underline text-blue-800">
-        {' '}
-        Login
-      </Link>
-    </p>
-  </div>
-  <div className="error">{error}</div>
-</form>
+        {error && (
+          <div className='error'>
+            <p>⚠️ {error}</p>
+          </div>
+        )}
 
+        <div className=' flex  flex-col gap-3'>
+          <button type='submit'  disabled={loading}  className={`primaryBtn ${loading ? 'bg-gray-400' : ''}`}>
+            {loading?"Loading...":"Signup"}
+          </button>
+          <p className='text-center '>
+            Already have an account?{' '}
+            <Link to='/login' className='font-semibold text-blue-600 hover:underline'>
+              Login
+            </Link>
+          </p>
+        </div>
+
+        <div className="line"></div>
+        
+      </form>
     </section>
+  );
+};
 
-  )
-}
-
-export default Register
+export default Register;
